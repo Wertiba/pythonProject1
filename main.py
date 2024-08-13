@@ -1,0 +1,32 @@
+import cv2
+import pytesseract
+
+# Путь для подключения tesseract
+pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
+
+# Подключение фото
+img = cv2.imread('photos/photo_2024-08-13_15-28-38.jpg')
+img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+# Будет выведен весь текст с картинки
+config = r'--oem 3 --psm 6'
+print(pytesseract.image_to_string(img, config=config, lang='rus+eng'))
+
+data = pytesseract.image_to_data(img, config=config)
+
+for i, el in enumerate(data.splitlines()):
+    if i == 0:
+        continue
+
+    el = el.split()
+
+    try:
+        x, y, w, h = int(el[6]), int(el[7]), int(el[8]), int(el[9])
+        cv2.rectangle(img, (x, y), (w + x, h + y), (0, 0, 255), 1)
+    except IndexError:
+        print('Операция пропущена')
+
+    # print(el)
+
+cv2.imshow('result', img)
+cv2.waitKey(0)
