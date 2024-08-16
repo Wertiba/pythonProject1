@@ -2,35 +2,46 @@ import cv2
 import pytesseract
 import re
 
-#путь для подключения tesseract
+#tesseract connection
 pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
-
-#подключение фото
-img = cv2.imread('photos/photo_2024-08-15_10-12-19.jpg')
-img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-#получение текста с картинки
 config = r'--oem 3 --psm 6'
-text = (pytesseract.image_to_string(img, config=config, lang='rus+eng'))
-print(text)
 
-#координаты слов
-data = pytesseract.image_to_data(img, config=config, lang='rus')
-
-#нахождение секретного слова
-tags = re.finditer(r'(ко)(-|—?)(\s*)(до)(-|—?)(\s*)(во)(-|—?)(\s*)(е)(\s)(‘|"?)(сло)(-|—?)(\s*)(во)(\s+)(\S+)', text)
-secret_words = [tag.group(18) for tag in tags]
+#photo connection
+img = cv2.imread('photos/photo_2024-08-15_11-07-28.jpg')
 
 
-def refactor():
+def refactor(img):
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+    #getting text from image
+    text = (pytesseract.image_to_string(img, config=config, lang='rus+eng'))
+    print(text)
+
+    # coordinates of words
+    data = pytesseract.image_to_data(img, config=config, lang='rus')
+
+    # finding the secret word
+    tags = re.finditer(
+        r'(ко)(.?)(-|—?)(.?)(\s*)(.?)(до)(.?)(-|—?)(.?)(\s*)(.?)(во)(.?)(-|—?)(\s*)(.?)(е)(.?)(\s)(.?)(сло)(.?)(-|—?)(.?)(\s*)(.?)(во)(.?)(\s+)([а-яА-Яa-zA-Z\-_'
+        r']+)', text)
+    secret_words = [tag.group(31) for tag in tags]
+    print(secret_words)
+
+
     for i, el in enumerate(data.splitlines()):
-        #скип первой итерации
+        #first iteration skip
         if i == 0:
             continue
 
         el = el.split()
 
         try:
+            #remove other symbols
+            symbols_to_remove = ",!?."
+            for symbol in symbols_to_remove:
+                el[11] = el[11].replace(symbol, "")
+
+
             print(el[11])
             x, y, w, h = int(el[6]), int(el[7]), int(el[8]), int(el[9])
 
@@ -43,14 +54,12 @@ def refactor():
 
 
 
-
-
         except IndexError:
             # print('Операция пропущена')
             pass
 
+    return img
 
 if __name__ == '__main__':
-    refactor()
-    cv2.imshow('result', img)
+    cv2.imshow('result', refactor(img))
     cv2.waitKey(0)
