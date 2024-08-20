@@ -7,7 +7,7 @@ pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesse
 config = r'--oem 3 --psm 6'
 
 #photo connection
-img = cv2.imread('photos/photo_2024-08-20_15-25-45.jpg')
+img = cv2.imread('photos/photo_2024-08-20_15-52-37.jpg')
 
 
 def refactor(img):
@@ -23,8 +23,8 @@ def refactor(img):
 
     # finding the secret word
     tags = re.finditer(
-        r'(ко)(.?)(-|—?)(.?)(\s*)(.?)(до)(.?)(-|—?)(.?)(\s*)(.?)(во)(.?)(-|—?)(\s*)(.?)(е)(.?)(\s)(.?)(сло)(.?)(-|—?)(.?)(\s*)(.?)(во)(.?)(\s*)([а-яА-Яa-zA-Z\-_]+)(\.?)', text)
-    secret_words = [tag.group(31) for tag in tags]
+        r'(ко)(.?)(-|—?)(.?)(\s*)(.?)(до)(.?)(-|—?)(.?)(\s*)(.?)(во)(.?)(-|—?)(\s*)(.?)(е)(.?)(\s)(.?)(сло)(.?)(-|—?)(.?)(\s*)(.?)(во)(.?)(\s*)([а-яА-Яa-zA-Z\-_]+)(\.?)(\n?)', text)
+    secret_words = [tag for tag in tags]
     print(secret_words)
 
 
@@ -50,12 +50,14 @@ def refactor(img):
                 again = False
 
             for word in secret_words:
-                if str(el[11]).lower() == str(word).lower():
+                if str(el[11]).lower() == str(word.group(31)).lower():
                     cv2.rectangle(img, (x, y), (w + x, h + y), (0, 0, 0), thickness=-1)
 
                     if str(el[11]).lower()[-1] == '-':
                         again = True
 
+                    if str(word.group(33)) == '\n':
+                        again = True
 
 
         except IndexError:
