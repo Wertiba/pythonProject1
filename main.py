@@ -7,10 +7,11 @@ pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesse
 config = r'--oem 3 --psm 6'
 
 #photo connection
-img = cv2.imread('photos/photo_2024-08-15_11-07-28.jpg')
+img = cv2.imread('photos/photo_2024-08-20_15-25-45.jpg')
 
 
 def refactor(img):
+    again = False
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     #getting text from image
@@ -22,8 +23,7 @@ def refactor(img):
 
     # finding the secret word
     tags = re.finditer(
-        r'(ко)(.?)(-|—?)(.?)(\s*)(.?)(до)(.?)(-|—?)(.?)(\s*)(.?)(во)(.?)(-|—?)(\s*)(.?)(е)(.?)(\s)(.?)(сло)(.?)(-|—?)(.?)(\s*)(.?)(во)(.?)(\s+)([а-яА-Яa-zA-Z\-_'
-        r']+)', text)
+        r'(ко)(.?)(-|—?)(.?)(\s*)(.?)(до)(.?)(-|—?)(.?)(\s*)(.?)(во)(.?)(-|—?)(\s*)(.?)(е)(.?)(\s)(.?)(сло)(.?)(-|—?)(.?)(\s*)(.?)(во)(.?)(\s*)([а-яА-Яa-zA-Z\-_]+)(\.?)', text)
     secret_words = [tag.group(31) for tag in tags]
     print(secret_words)
 
@@ -34,6 +34,7 @@ def refactor(img):
             continue
 
         el = el.split()
+        x, y, w, h = int(el[6]), int(el[7]), int(el[8]), int(el[9])
 
         try:
             #remove other symbols
@@ -41,16 +42,19 @@ def refactor(img):
             for symbol in symbols_to_remove:
                 el[11] = el[11].replace(symbol, "")
 
-
             print(el[11])
-            x, y, w, h = int(el[6]), int(el[7]), int(el[8]), int(el[9])
+
+
+            if again == True:
+                cv2.rectangle(img, (x, y), (w + x, h + y), (0, 0, 0), thickness=-1)
+                again = False
 
             for word in secret_words:
-                if el[11] == word:
+                if str(el[11]).lower() == str(word).lower():
                     cv2.rectangle(img, (x, y), (w + x, h + y), (0, 0, 0), thickness=-1)
 
-                # elif str(el[11])[-1] == '-':
-                #     print('!!!!!')
+                    if str(el[11]).lower()[-1] == '-':
+                        again = True
 
 
 
