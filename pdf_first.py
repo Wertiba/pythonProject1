@@ -13,10 +13,10 @@ from pdfminer.high_level import extract_pages, extract_text
 # text = extract_text('pdf/PML30_AddmissionWork_2020_Form_08-problems-v2.pdf')
 # print(text)
 
-pdf = fitz.open('pdf/7-kl__биология.pdf')
+pdf = fitz.open('pdf/doc20240820153531130462.pdf')
 counter = 1
 
-for i in range(10):
+for i in range(len(pdf)):
     page = pdf[i]
     images = page.get_images()
 
@@ -35,12 +35,12 @@ for i in range(10):
 
 
 
-i1 = Image.open('photos/for_pdf/image1.jpeg')
-
-il = [f'photos/for_pdf/image{i}.jpeg' for i in range(10)]
+# i1 = Image.open('photos/for_pdf/image1.jpeg')
+#
+# il = [f'photos/for_pdf/image{i}.jpeg' for i in range(10)]
 # i2 = Image.open('photos/photo_2024-08-14_12-52-19.jpg')
 # i3 = Image.open('photos/photo_2024-08-13_15-28-38.jpg')
 #
 # il = [i2, i3]
 
-i1.save('C:\\Users\\wertiba\\PycharmProjects\\pythonProject1\\pdf\\test4.pdf', 'PDF', resolution=100, save_all=True, append_images=il)
+# i1.save('C:\\Users\\wertiba\\PycharmProjects\\pythonProject1\\pdf\\test4.pdf', 'PDF', resolution=100, save_all=True, append_images=il)

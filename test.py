@@ -1,69 +1,36 @@
+from pdf2image import convert_from_path
+from PIL import Image
 import cv2
-import pytesseract
-import re
-
-#path to connect tesseract
-pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
-
-#photo connection
-img = cv2.imread('photos/photo_2024-08-16_10-40-08.jpg')
-img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-#getting text from image
-config = r'--oem 3 --psm 6'
-text = (pytesseract.image_to_string(img, config=config, lang='rus+eng'))
-print(text)
-
-#coordinates of words
-data = pytesseract.image_to_data(img, config=config, lang='rus')
-
-#finding the secret word
-tags = re.finditer(r'(ко)(.?)(-|—?)(.?)(\s*)(.?)(до)(.?)(-|—?)(.?)(\s*)(.?)(во)(.?)(-|—?)(\s*)(.?)(е)(.?)(\s)(.?)(сло)(.?)(-|—?)(.?)(\s*)(.?)(во)(.?)(\s+)([а-яА-Яa-zA-Z\-_'
-                   r']+)', text)
-
-secret_words = []
-for tag in tags:
-    print(tag)
-    secret_words.append(tag.group(31))
-
-print(secret_words)
+import numpy as np
+import io
 
 
-def refactor():
-    for i, el in enumerate(data.splitlines()):
-        #first iteration skip
-        if i == 0:
-            continue
+def extract_and_process_images_in_memory(pdf_path, processed_pdf_path='processed_output.pdf'):
+    # Конвертируем страницы PDF в изображения (объекты Pillow)
+    pages = convert_from_path(pdf_path, poppler_path=r"C:\Users\wertiba\Documents\Install\Release-24.07.0-0\poppler-24.07.0\Library\bin")
 
-        el = el.split()
+    processed_images = []
+    for page in pages:
+        # Конвертируем страницу из Pillow в формат, пригодный для OpenCV (numpy array)
+        page_np = np.array(page)
+        page_cv = cv2.cvtColor(page_np, cv2.COLOR_RGB2BGR)
 
-        try:
-            #remove other symbols
-            symbols_to_remove = ",!?."
-            for symbol in symbols_to_remove:
-                el[11] = el[11].replace(symbol, "")
+        # Пример обработки: конвертация в черно-белое изображение
+        gray_image = cv2.cvtColor(page_cv, cv2.COLOR_BGR2GRAY)
 
+        # Конвертируем обратно в формат, пригодный для Pillow
+        processed_image_pil = Image.fromarray(gray_image).convert('RGB')
 
-            print(el[11])
-            x, y, w, h = int(el[6]), int(el[7]), int(el[8]), int(el[9])
+        # Добавляем обработанное изображение в список
+        processed_images.append(processed_image_pil)
 
-            for word in secret_words:
-                if el[11] == word:
-                    cv2.rectangle(img, (x, y), (w + x, h + y), (0, 0, 0), thickness=-1)
-
-                # elif str(el[11])[-1] == '-':
-                #     print('!!!!!')
-
-
-
+    # Конвертируем все обработанные изображения в один PDF
+    if processed_images:
+        processed_images[0].save(
+            processed_pdf_path, save_all=True, append_images=processed_images[1:]
+        )
+        print(f"Обработанные изображения объединены в PDF: {processed_pdf_path}")
 
 
-        except IndexError:
-            # print('Операция пропущена')
-            pass
-
-
-if __name__ == '__main__':
-    refactor()
-    cv2.imshow('result', img)
-    cv2.waitKey(0)
+# Использование функции
+extract_and_process_images_in_memory('pdf/sample_pdf.pdf')

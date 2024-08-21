@@ -15,6 +15,7 @@ img = cv2.imread('photos/photo_2024-08-20_15-49-35.jpg')
 #logger.add('debug.log', format='{time} {level} {message}', level='DEBUG', rotation='10 KB', compression='zip')
 
 
+@logger.catch()
 def refactor(img):
     again = False
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
