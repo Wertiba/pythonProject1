@@ -13,85 +13,78 @@ config = r'--oem 3 --psm 6'
 
 poppler_path=r"C:\Users\wertiba\Documents\Install\Release-24.07.0-0\poppler-24.07.0\Library\bin"
 
-#photo connection
-img = cv2.imread('photos/photo_2024-08-20_15-49-35.jpg')
-
 #loguru setting
-#logger.add('debug.log', format='{time} {level} {message}', level='DEBUG', rotation='10 KB', compression='zip')
+logger.add('debug.log', format='{time} {level} {message}', level='DEBUG', rotation='1 MB', compression='zip')
 
 
-@logger.catch()
+def extract_secret_words(text):
+    pattern = r'(ко)(.?)(-|—?)(.?)(\s*)(.?)(до)(.?)(-|—?)(.?)(\s*)(.?)(во)(.?)(-|—?)(\s*)(.?)(е)(.?)(\s)(.?)(сло)(.?)(-|—?)(.?)(\s*)(.?)(во)(.?)(\s*)([а-яА-Яa-zA-Z\-_]+)(\.?)(\n?)'
+    return list(re.finditer(pattern, text))
+
+
+def clean_word(word, symbols_to_remove=",!?."):
+    for symbol in symbols_to_remove:
+        word = word.replace(symbol, "")
+    return word
+
+
 def refactor(img):
-    again = False
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-    #getting text from image
-    text = (pytesseract.image_to_string(img, config=config, lang='rus'))
+    # Получение текста с изображения
+    text = pytesseract.image_to_string(img, config=config, lang='rus')
     logger.info(text)
 
-    # coordinates of words
+    # Координаты слов
     data = pytesseract.image_to_data(img, config=config, lang='rus')
 
-    # finding the secret word
-    tags = re.finditer(
-        r'(ко)(.?)(-|—?)(.?)(\s*)(.?)(до)(.?)(-|—?)(.?)(\s*)(.?)(во)(.?)(-|—?)(\s*)(.?)(е)(.?)(\s)(.?)(сло)(.?)(-|—?)(.?)(\s*)(.?)(во)(.?)(\s*)([а-яА-Яa-zA-Z\-_]+)(\.?)(\n?)', text)
-    secret_words = [tag for tag in tags]
+    # Поиск "секретных" слов
+    secret_words = extract_secret_words(text)
     logger.info(secret_words)
 
+    draw_black_rect = False
 
-    for i, el in enumerate(data.splitlines()):
-        #first iteration skip
+    for i, line in enumerate(data.splitlines()):
         if i == 0:
             continue
 
-        el = el.split()
-        x, y, w, h = int(el[6]), int(el[7]), int(el[8]), int(el[9])
+        elements = line.split()
+        if len(elements) < 12:
+            logger.warning(f'Операция пропущена из-за количества элементов')
+            continue
 
-        try:
-            #remove other symbols
-            symbols_to_remove = ",!?."
-            for symbol in symbols_to_remove:
-                el[11] = el[11].replace(symbol, "")
+        x, y, w, h = map(int, elements[6:10])
+        current_word = clean_word(elements[11].lower())
 
-            logger.info(el[11])
+        if draw_black_rect:
+            cv2.rectangle(img, (x, y), (w + x, h + y), (0, 0, 0), thickness=-1)
+            draw_black_rect = False
 
-
-            if again == True:
+        for word in secret_words:
+            if current_word == word.group(31).lower():
                 cv2.rectangle(img, (x, y), (w + x, h + y), (0, 0, 0), thickness=-1)
-                again = False
 
-            for word in secret_words:
-                if str(el[11]).lower() == str(word.group(31)).lower():
-                    cv2.rectangle(img, (x, y), (w + x, h + y), (0, 0, 0), thickness=-1)
-
-                    if str(el[11]).lower()[-1] == '-' or '—':
-                        again = True
-
-                    if str(word.group(33)) == '\n':
-                        again = True
-
-
-        except IndexError:
-            logger.warning('Операция пропущена')
-
+                # Проверяем наличие дефиса и условия для продолжения
+                if current_word.endswith(('-', '—')) or word.group(33) == '\n':
+                    draw_black_rect = True
     return img
 
 
 def extract_and_process_images_in_memory(pdf_path, processed_pdf_path='processed_output.pdf'):
     # Конвертируем страницы PDF в изображения (объекты Pillow)
     pages = convert_from_path(pdf_path, poppler_path=r"C:\Users\wertiba\Documents\Install\Release-24.07.0-0\poppler-24.07.0\Library\bin")
-
     processed_images = []
+
     for page in pages:
         # Конвертируем страницу из Pillow в формат, пригодный для OpenCV (numpy array)
         page_np = np.array(page)
         page_cv = cv2.cvtColor(page_np, cv2.COLOR_RGB2BGR)
 
-        # Пример обработки: конвертация в черно-белое изображение
-        gray_image = refactor(page_cv)
+        # Обработка изображения
+        image_with_rect = refactor(page_cv)
 
         # Конвертируем обратно в формат, пригодный для Pillow
-        processed_image_pil = Image.fromarray(gray_image).convert('RGB')
+        processed_image_pil = Image.fromarray(image_with_rect).convert('RGB')
 
         # Добавляем обработанное изображение в список
         processed_images.append(processed_image_pil)
@@ -101,10 +94,13 @@ def extract_and_process_images_in_memory(pdf_path, processed_pdf_path='processed
         processed_images[0].save(
             processed_pdf_path, save_all=True, append_images=processed_images[1:]
         )
-        print(f"Обработанные изображения объединены в PDF: {processed_pdf_path}")
+        logger.info(f"Обработанные изображения объединены в PDF: {processed_pdf_path}")
+
+@logger.catch()
+def main():
+    pdf_path = str(input('Скопируйте сюда полный путь до pdf документа: '))
+    extract_and_process_images_in_memory(pdf_path)
 
 
 if __name__ == '__main__':
-    # cv2.imshow('result', refactor(img))
-    # cv2.waitKey(0)
-    extract_and_process_images_in_memory('pdf/doc20240820153531130462.pdf')
+    main()
