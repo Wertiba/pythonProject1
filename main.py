@@ -7,13 +7,13 @@ from pdf2image import convert_from_path
 from PIL import Image
 from loguru import logger
 
-#connection tesseract and poppler
+# connection tesseract and poppler
 pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
 config = r'--oem 3 --psm 6'
 
-poppler_path=r"C:\Users\wertiba\Documents\Install\Release-24.07.0-0\poppler-24.07.0\Library\bin"
+poppler_path = r"C:\Users\wertiba\Documents\Install\Release-24.07.0-0\poppler-24.07.0\Library\bin"
 
-#loguru setting
+# loguru setting
 logger.add('debug.log', format='{time} {level} {message}', level='DEBUG', rotation='1 MB', compression='zip')
 
 
@@ -23,9 +23,7 @@ def extract_secret_words(text):
 
 
 def clean_word(word, symbols_to_remove=",!?."):
-    for symbol in symbols_to_remove:
-        word = word.replace(symbol, "")
-    return word
+    return word.translate(str.maketrans('', '', symbols_to_remove)).strip().lower()
 
 
 def refactor(img):
@@ -72,7 +70,7 @@ def refactor(img):
 
 def extract_and_process_images_in_memory(pdf_path, processed_pdf_path='processed_output.pdf'):
     # Конвертируем страницы PDF в изображения (объекты Pillow)
-    pages = convert_from_path(pdf_path, poppler_path=r"C:\Users\wertiba\Documents\Install\Release-24.07.0-0\poppler-24.07.0\Library\bin")
+    pages = convert_from_path(pdf_path, poppler_path=poppler_path)
     processed_images = []
 
     for page in pages:
@@ -98,7 +96,7 @@ def extract_and_process_images_in_memory(pdf_path, processed_pdf_path='processed
 
 @logger.catch()
 def main():
-    pdf_path = str(input('Скопируйте сюда полный путь до pdf документа: '))
+    pdf_path = clean_word(str(input('Скопируйте сюда полный путь до pdf документа: ')), symbols_to_remove='\"')
     extract_and_process_images_in_memory(pdf_path)
 
 
