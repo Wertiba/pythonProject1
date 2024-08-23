@@ -35,14 +35,14 @@ def refactor(img):
 
     # Extract text from the image using Tesseract
     text = pytesseract.image_to_string(img, config=config, lang='rus')
-    logger.info(text)
+    logger.info(f'text received: {text}')
 
     # Get word coordinates and other details from the image
     data = pytesseract.image_to_data(img, config=config, lang='rus')
 
     # Find "secret words" in the extracted text
     secret_words = extract_secret_words(text)
-    logger.info(secret_words)
+    logger.info(f'secret words received: {secret_words}')
 
     # Flag to handle word continuation after hyphens or line breaks
     draw_black_rect = False
@@ -65,6 +65,7 @@ def refactor(img):
         if draw_black_rect:
             # Draw a black rectangle over the previous word if needed
             cv2.rectangle(img, (x, y), (w + x, h + y), (0, 0, 0), thickness=-1)
+            logger.info(f'the rectangle is drawn (hyphenation), coordinates: {x, y, w, h}')
             draw_black_rect = False
 
         for word in secret_words:
@@ -72,6 +73,7 @@ def refactor(img):
             if current_word == word.group(31).lower():
                 # Draw a black rectangle over the matched word
                 cv2.rectangle(img, (x, y), (w + x, h + y), (0, 0, 0), thickness=-1)
+                logger.info(f'the rectangle is drawn, coordinates: {x, y, w, h}')
 
                 # Check for hyphenation or line breaks to continue
                 if current_word.endswith(('-', '—')) or word.group(33) == '\n':
@@ -83,20 +85,26 @@ def extract_and_process_images_in_memory(pdf_path, processed_pdf_path='processed
     # Convert PDF pages to images (Pillow objects)
     pages = convert_from_path(pdf_path, poppler_path=poppler_path)
     processed_images = []
+    counter = 1
 
     for page in pages:
+        logger.info(f'page {counter}')
         # Convert the page from Pillow to OpenCV format (numpy array)
         page_np = np.array(page)
         page_cv = cv2.cvtColor(page_np, cv2.COLOR_RGB2BGR)
+        logger.info('the image has been converted to the required format')
 
         # Process the image (apply blackout based on secret words)
         image_with_rect = refactor(page_cv)
 
         # Convert back to Pillow format for PDF output
         processed_image_pil = Image.fromarray(image_with_rect).convert('RGB')
+        logger.info('image processed')
 
         # Add the processed image to the list
         processed_images.append(processed_image_pil)
+
+        counter += 1
 
     # Combine all processed images into a single PDF
     if processed_images:
