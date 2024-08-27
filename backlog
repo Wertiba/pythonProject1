@@ -1,3 +1,18 @@
-добавить больше информации в лог, сделать json файл
-добавить подсчёт совпадений слов с закрашиваниями, если не совпадает то делать исключение и писать в лог
-добавить исключения
+2024-08-23 16:00:55 2024-08-23 13:00:55.811 | ERROR    | __main__:<module>:134 - An error has been caught in function '<module>', process 'MainProcess' (1), thread 'MainThread' (140576107957120):
+2024-08-23 16:00:55 Traceback (most recent call last):
+2024-08-23 16:00:55
+2024-08-23 16:00:55 > File "/app/main.py", line 134, in <module>
+2024-08-23 16:00:55     main()
+2024-08-23 16:00:55     └ <function main at 0x7fda4ebf0c10>
+2024-08-23 16:00:55
+2024-08-23 16:00:55   File "/app/main.py", line 129, in main
+2024-08-23 16:00:55     pdf_path = clean_word(str(input('Copy the full path to the PDF document: ')), symbols_to_remove='\"')
+2024-08-23 16:00:55                └ <function clean_word at 0x7fda4ebf0790>
+2024-08-23 16:00:55
+2024-08-23 16:00:55 EOFError: EOF when reading a line
+2024-08-23 16:00:55 Copy the full path to the PDF document:
+
+
+
+
+docker run --rm -v "C:\\Users\\wertiba\\PycharmProjects\\pythonProject1\\test_pdf.pdf:/app/input.pdf" pdf-processor python main.py /app/input.pdf
