@@ -1,7 +1,7 @@
-# Используем базовый образ Python
+# Using a Python base image
 FROM python:3.10-slim
 
-# Установим необходимые пакеты
+# Install the necessary packages
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
     tesseract-ocr-rus \
@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Установим Python-библиотеки через pip
+# Install Python libraries via pip
 RUN pip install --no-cache-dir \
     pytesseract \
     pdf2image \
@@ -18,11 +18,11 @@ RUN pip install --no-cache-dir \
     opencv-python-headless \
     loguru
 
-# Установим рабочую директорию
+# Set the working directory
 WORKDIR /app
 
-# Копируем Python-скрипт и другие необходимые файлы
-COPY main.py ./
+# Copy the Python script
+COPY main_file_for_docker.py /app/main.py
 
-# Указываем команду для запуска приложения
-CMD ["python", "main.py"]
+# Specify the command to launch the application
+CMD ["python", "main_file_for_docker.py"]
