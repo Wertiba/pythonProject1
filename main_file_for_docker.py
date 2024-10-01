@@ -8,7 +8,7 @@ from pdf2image import convert_from_path
 from PIL import Image
 from loguru import logger
 
-# Tesseract configuration for OCR (Optical Character Recognition)
+# Tesseract configuration for OCR
 config = r'--oem 3 --psm 6'
 
 # Loguru settings for logging with a rotating log file of 1 MB and compression

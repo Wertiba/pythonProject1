@@ -1,3 +1,5 @@
 docker build -t pdf-processor .
 docker run --rm -it -v "C:\\Users\\wertiba\\PycharmProjects\\pythonProject1\\test_pdf.pdf:/app/input.pdf" -v "C:\\Users\\wertiba\\PycharmProjects\\pythonProject1\\output:/app/output" pdf-processor bash -c "python main.py /app/input.pdf"
 
+http://127.0.0.1:5000/api/download/test_pdf.pdf
+http://127.0.0.1:5000/api/upload
