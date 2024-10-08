@@ -2,10 +2,13 @@ import cv2
 import pytesseract
 import re
 import numpy as np
+import os
 
 from pdf2image import convert_from_path
 from PIL import Image
 from loguru import logger
+from flask import Flask, request, send_file, jsonify
+
 
 # Connecting Tesseract
 pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
@@ -18,6 +21,12 @@ poppler_path = r"C:\Users\wertiba\Documents\Install\Release-24.07.0-0\poppler-24
 logger.add('debug.log', format='{time} {level} {message}', level='DEBUG', rotation='1 MB', compression='zip')
 
 page_counter = 1
+
+app = Flask(__name__)
+
+# Uploads file directory
+upload_folder = 'uploads'
+os.makedirs(upload_folder, exist_ok=True)
 
 
 def extract_secret_words(text):
@@ -124,11 +133,30 @@ def extract_and_process_images_in_memory(pdf_path, processed_pdf_path='processed
         )
         logger.info(f"Processed images merged into PDF: {processed_pdf_path}")
 
-@logger.catch()
-def main():
-    pdf_path = clean_word(str(input('Copy the full path to the PDF document: ')), symbols_to_remove='\"')
-    extract_and_process_images_in_memory(pdf_path)
 
+@app.route('/api/file', methods=['POST'])
+def upload_and_return_file():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+
+    # Saving file
+    file_path = os.path.join(upload_folder, file.filename)
+    file.save(file_path)
+
+    extract_and_process_images_in_memory(file_path)
+
+    # Sanding response
+    return send_file(
+        'processed_output.pdf',
+        as_attachment=True,
+        download_name=file.filename,
+        mimetype=file.mimetype
+    )
 
 if __name__ == '__main__':
-    main()
+    app.run(debug=True)
