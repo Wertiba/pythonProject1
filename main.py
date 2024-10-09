@@ -18,14 +18,14 @@ config = r'--oem 3 --psm 6'
 poppler_path = r"C:\Users\wertiba\Documents\Install\Release-24.07.0-0\poppler-24.07.0\Library\bin"
 
 # Loguru settings for logging
-logger.add('debug.log', format='{time} {level} {message}', level='DEBUG', rotation='1 MB', compression='zip')
+logger.add('output\debug.log', format='{time} {level} {message}', level='DEBUG', rotation='1 MB', compression='zip')
 
 page_counter = 1
-
+processed_pdf_path = 'output\processed_output.pdf'
 app = Flask(__name__)
 
 # Uploads file directory
-upload_folder = 'uploads'
+upload_folder = 'input'
 os.makedirs(upload_folder, exist_ok=True)
 
 
@@ -100,7 +100,7 @@ def refactor(img):
     return img
 
 
-def extract_and_process_images_in_memory(pdf_path, processed_pdf_path='processed_output.pdf'):
+def extract_and_process_images_in_memory(pdf_path):
     global page_counter
     # Convert PDF pages to images (Pillow objects)
     pages = convert_from_path(pdf_path, poppler_path=poppler_path)
@@ -137,26 +137,29 @@ def extract_and_process_images_in_memory(pdf_path, processed_pdf_path='processed
 @app.route('/api/file', methods=['POST'])
 def upload_and_return_file():
     if 'file' not in request.files:
+        logger.error('No file part')
         return jsonify({"error": "No file part"}), 400
 
     file = request.files['file']
 
     if file.filename == '':
+        logger.error('No selected file')
         return jsonify({"error": "No selected file"}), 400
 
     # Saving file
     file_path = os.path.join(upload_folder, file.filename)
     file.save(file_path)
+    logger.info('users file saved successfully')
 
     extract_and_process_images_in_memory(file_path)
 
     # Sanding response
     return send_file(
-        'processed_output.pdf',
+        processed_pdf_path,
         as_attachment=True,
         download_name=file.filename,
         mimetype=file.mimetype
     )
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
