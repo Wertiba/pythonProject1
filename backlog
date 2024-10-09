@@ -4,4 +4,7 @@ docker run --rm -it -v "C:\\Users\\wertiba\\PycharmProjects\\pythonProject1\\tes
 http://127.0.0.1:5000/api/download/test_pdf.pdf
 http://127.0.0.1:5000/api/upload
 
-
+убрать видимость текста из лога
+рефакторинг (url, комментарии, логи)
+исправить превью файла в postman
+добавить проверку на тип отправленного файла

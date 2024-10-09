@@ -1,8 +1,10 @@
 import cv2
 import pytesseract
 import re
-import numpy as np
 import os
+import zipfile
+import io
+import numpy as np
 
 from pdf2image import convert_from_path
 from PIL import Image
@@ -26,6 +28,7 @@ app = Flask(__name__)
 
 # Uploads file directory
 upload_folder = 'input'
+download_folder = 'output'
 os.makedirs(upload_folder, exist_ok=True)
 
 
@@ -153,12 +156,27 @@ def upload_and_return_file():
 
     extract_and_process_images_in_memory(file_path)
 
-    # Sanding response
+    # Создаем буфер для ZIP-архива в памяти
+    zip_buffer = io.BytesIO()
+
+    # Открываем ZIP-архив для записи
+    with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+        # Перебираем все файлы в папке upload_folder
+        for foldername, subfolders, filenames in os.walk(download_folder):
+            for filename in filenames:
+                file_path = os.path.join(foldername, filename)
+                # Добавляем каждый файл в архив
+                zip_file.write(file_path, os.path.basename(file_path))
+
+    # Возвращаем указатель на начало буфера
+    zip_buffer.seek(0)
+
+    # Отправляем ZIP-архив пользователю
     return send_file(
-        processed_pdf_path,
+        zip_buffer,
         as_attachment=True,
-        download_name=file.filename,
-        mimetype=file.mimetype
+        download_name='all_files.zip',
+        mimetype='application/zip'
     )
 
 if __name__ == '__main__':
