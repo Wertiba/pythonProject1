@@ -9,7 +9,7 @@ import numpy as np
 from pdf2image import convert_from_path
 from PIL import Image
 from loguru import logger
-from flask import Flask, request, send_file, jsonify
+from flask import Flask, request, send_file, jsonify, render_template
 
 
 # Connecting Tesseract
@@ -177,6 +177,10 @@ def upload_and_return_file():
 
     # Возвращаем указатель на начало буфера
     zip_buffer.seek(0)
+
+    # Очистка логера
+    with open('output/debug.log', 'w'):
+        pass
 
     # Отправляем ZIP-архив пользователю
     return send_file(
