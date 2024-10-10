@@ -31,6 +31,9 @@ upload_folder = 'input'
 download_folder = 'output'
 os.makedirs(upload_folder, exist_ok=True)
 
+# Список допустимых MIME-типов
+allowed_mime_types = {'application/pdf'}
+
 
 def extract_secret_words(text):
     # Regex pattern to match the "secret word" phrase with variations, including hyphenation and line breaks
@@ -49,7 +52,6 @@ def refactor(img):
 
     # Extract text from the image using Tesseract
     text = pytesseract.image_to_string(img, config=config, lang='rus')
-    logger.debug(f'text received: {text}')
 
     # Get word coordinates and other details from the image
     data = pytesseract.image_to_data(img, config=config, lang='rus')
@@ -148,6 +150,11 @@ def upload_and_return_file():
     if file.filename == '':
         logger.error('No selected file')
         return jsonify({"error": "No selected file"}), 400
+
+    # Проверка MIME-типа файла
+    if file.content_type not in allowed_mime_types:
+        return jsonify({"error": "Invalid file type"}), 400
+
 
     # Saving file
     file_path = os.path.join(upload_folder, file.filename)
