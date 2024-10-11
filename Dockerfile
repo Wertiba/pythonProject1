@@ -1,10 +1,12 @@
-# Using a Python base image
-FROM python:3.10-slim
+# Базовый образ с Python
+FROM python:3.9-slim
 
-# Install the necessary packages
+# Устанавливаем зависимости для работы с изображениями и PDF
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
     tesseract-ocr-rus \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
     poppler-utils \
     libopencv-dev \
     curl \
@@ -16,13 +18,20 @@ RUN pip install --no-cache-dir \
     pdf2image \
     pillow \
     opencv-python-headless \
-    loguru
+    loguru \
+    flask \
+    waitress
 
-# Set the working directory
+# Создаем необходимые директории для входных и выходных файлов
+RUN mkdir -p /app/input /app/output
+
+# Копируем код приложения в контейнер
+COPY main_file_for_docker.py /app/
+
+# Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Copy the Python script
-COPY main_file_for_docker.py /app/main.py
+EXPOSE 8000
 
-# Specify the command to launch the application
-CMD ["python", "main_file_for_docker.py"]
+# Запускаем приложение
+CMD ["waitress-serve", "--port=8000", "main_file_for_docker:app"]
