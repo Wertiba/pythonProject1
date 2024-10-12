@@ -35,6 +35,10 @@ os.makedirs(upload_folder, exist_ok=True)
 allowed_mime_types = {'application/pdf'}
 
 
+@app.route('/')
+def index():
+    return render_template('index.html')
+
 def extract_secret_words(text):
     # Regex pattern to match the "secret word" phrase with variations, including hyphenation and line breaks
     pattern = r'(ко)(.?)(-|—?)(.?)(\s*)(.?)(до)(.?)(-|—?)(.?)(\s*)(.?)(во)(.?)(-|—?)(\s*)(.?)(е)(.?)(\s)(.?)(сло)(.?)(-|—?)(.?)(\s*)(.?)(во)(.?)(\s*)([а-яА-Яa-zA-Z\-_]+)(\.?)(\n?)'
@@ -191,4 +195,4 @@ def upload_and_return_file():
     )
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(host='127.0.0.1', port=5000, debug=False)

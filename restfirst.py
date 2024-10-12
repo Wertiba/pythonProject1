@@ -1,31 +1,31 @@
-from flask import Flask, send_file, jsonify
+from flask import Flask, request, jsonify, render_template
 import os
-import zipfile
-import io
 
 app = Flask(__name__)
 
-# Папка для загрузки файлов
+# Директория для хранения загруженных файлов
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-@app.route('/api/download_all', methods=['POST'])
-def download_all_files():
-    zip_buffer = io.BytesIO()
-    with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
-        for filename in os.listdir(UPLOAD_FOLDER):
-            file_path = os.path.join(UPLOAD_FOLDER, filename)
-            if os.path.isfile(file_path):
-                zip_file.write(file_path, arcname=filename)
+@app.route('/')
+def index():
+    return render_template('index.html')  # Отображение HTML-страницы
 
-    zip_buffer.seek(0)  # Вернуться в начало буфера
+@app.route('/api/file', methods=['POST'])
+def upload_file():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part"}), 400
 
-    return send_file(
-        zip_buffer,
-        as_attachment=True,
-        download_name='all_files.zip',
-        mimetype='application/zip'
-    )
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+
+    # Сохраняем файл
+    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+    file.save(file_path)
+
+    return jsonify({"message": f"File {file.filename} uploaded successfully"}), 200
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)

@@ -21,7 +21,7 @@
             const fileInput = document.getElementById('fileInput');
             formData.append('file', fileInput.files[0]);
 
-            fetch('/api/upload', {
+            fetch('/api/file', {
                 method: 'POST',
                 body: formData
             })
