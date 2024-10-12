@@ -189,7 +189,7 @@ def upload_and_return_file():
     # Отправляем ZIP-архив пользователю
     return send_file(
         zip_buffer,
-        as_attachment=True,
+        as_attachment=False,
         download_name='all_files.zip',
         mimetype='application/zip'
     )

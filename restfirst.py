@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_file
 import os
 
 app = Flask(__name__)
@@ -25,7 +25,8 @@ def upload_file():
     file_path = os.path.join(UPLOAD_FOLDER, file.filename)
     file.save(file_path)
 
-    return jsonify({"message": f"File {file.filename} uploaded successfully"}), 200
+
+    return send_file(file_path)
 
 if __name__ == '__main__':
     app.run(debug=False)
